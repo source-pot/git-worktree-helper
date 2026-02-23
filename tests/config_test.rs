@@ -1,3 +1,5 @@
+use std::process::Command;
+use tempfile::TempDir;
 use wkspace::config::Config;
 
 #[test]
@@ -35,4 +37,28 @@ fn default_template_is_valid_toml() {
     // Verify it parses (strip comments first isn't needed — TOML supports comments)
     let config = Config::parse(&template).unwrap();
     assert_eq!(config.worktree.base_branch, "main");
+}
+
+fn init_git_repo(dir: &std::path::Path) {
+    Command::new("git").args(["init"]).current_dir(dir).output().unwrap();
+    Command::new("git").args(["config", "user.email", "test@test.com"]).current_dir(dir).output().unwrap();
+    Command::new("git").args(["config", "user.name", "Test"]).current_dir(dir).output().unwrap();
+    std::fs::write(dir.join("README.md"), "# test").unwrap();
+    Command::new("git").args(["add", "."]).current_dir(dir).output().unwrap();
+    Command::new("git").args(["commit", "-m", "init"]).current_dir(dir).output().unwrap();
+}
+
+#[test]
+fn resolve_context_auto_creates_config() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+
+    // No .wkspace.toml exists yet
+    assert!(!dir.path().join(".wkspace.toml").exists());
+
+    let ctx = wkspace::context::resolve(dir.path()).unwrap();
+    assert_eq!(ctx.config.worktree.base_branch, "main");
+
+    // Config file should now exist
+    assert!(dir.path().join(".wkspace.toml").exists());
 }
