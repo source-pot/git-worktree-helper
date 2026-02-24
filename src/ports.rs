@@ -31,7 +31,7 @@ pub fn allocate_ports(config: &HashMap<String, String>) -> anyhow::Result<HashMa
     let mut result = HashMap::new();
     let mut allocated: Vec<u16> = Vec::new();
 
-    for (_label, env_var) in config {
+    for env_var in config.values() {
         let port = allocate_port(&allocated)?;
         allocated.push(port);
         result.insert(env_var.clone(), port.to_string());

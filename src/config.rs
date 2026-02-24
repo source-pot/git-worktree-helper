@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
     #[serde(default)]
     pub worktree: WorktreeConfig,
@@ -21,7 +21,7 @@ pub struct WorktreeConfig {
     pub directory: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct ScriptsConfig {
     #[serde(default)]
     pub setup: Vec<String>,
@@ -37,30 +37,11 @@ fn default_directory() -> String {
     ".worktrees".to_string()
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            worktree: WorktreeConfig::default(),
-            scripts: ScriptsConfig::default(),
-            ports: HashMap::new(),
-        }
-    }
-}
-
 impl Default for WorktreeConfig {
     fn default() -> Self {
         Self {
             base_branch: default_base_branch(),
             directory: default_directory(),
-        }
-    }
-}
-
-impl Default for ScriptsConfig {
-    fn default() -> Self {
-        Self {
-            setup: Vec::new(),
-            teardown: Vec::new(),
         }
     }
 }
