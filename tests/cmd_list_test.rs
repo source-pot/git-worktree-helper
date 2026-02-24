@@ -2,7 +2,7 @@ use std::process::Command;
 use tempfile::TempDir;
 
 fn init_git_repo(dir: &std::path::Path) {
-    Command::new("git").args(["init"]).current_dir(dir).output().unwrap();
+    Command::new("git").args(["init", "-b", "main"]).current_dir(dir).output().unwrap();
     Command::new("git").args(["config", "user.email", "test@test.com"]).current_dir(dir).output().unwrap();
     Command::new("git").args(["config", "user.name", "Test"]).current_dir(dir).output().unwrap();
     std::fs::write(dir.join("README.md"), "# test").unwrap();
@@ -35,19 +35,21 @@ fn list_shows_created_worktrees() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());
 
-    wkspace_bin()
+    let output = wkspace_bin()
         .args(["new", "feat-a"])
         .current_dir(dir.path())
         .env("WKSPACE_NO_SHELL", "1")
         .output()
         .unwrap();
+    assert!(output.status.success(), "wkspace new feat-a failed: {}", String::from_utf8_lossy(&output.stderr));
 
-    wkspace_bin()
+    let output = wkspace_bin()
         .args(["new", "feat-b"])
         .current_dir(dir.path())
         .env("WKSPACE_NO_SHELL", "1")
         .output()
         .unwrap();
+    assert!(output.status.success(), "wkspace new feat-b failed: {}", String::from_utf8_lossy(&output.stderr));
 
     let output = wkspace_bin()
         .args(["list"])

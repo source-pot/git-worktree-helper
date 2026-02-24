@@ -5,7 +5,7 @@ use tempfile::TempDir;
 fn find_repo_root_in_git_repo() {
     let dir = TempDir::new().unwrap();
     Command::new("git")
-        .args(["init"])
+        .args(["init", "-b", "main"])
         .current_dir(dir.path())
         .output()
         .unwrap();
