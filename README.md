@@ -11,8 +11,11 @@ wkspace automates this. Define setup and teardown scripts once, and every worktr
 ## Features
 
 - Create worktrees with a single command — branch, directory, and shell session included
+- Auto-generate unique worktree names when no name is provided
+- Interactive picker to select which worktree to remove
 - Run setup scripts automatically after creating a worktree (e.g. `npm install`, `cp .env.example .env`)
 - Run teardown scripts before removal (e.g. `docker compose down`)
+- Allocate random available ports and expose them as environment variables to scripts and shell
 - Auto-creates `.wkspace.toml` config on first use
 - Adds the worktrees directory to `.gitignore` automatically
 - Lists only wkspace-managed worktrees, not all git worktrees
@@ -54,12 +57,15 @@ Creates `.wkspace.toml` with default configuration and adds `.worktrees` to `.gi
 
 This is optional — running any other command will auto-create the config if it doesn't exist.
 
-### `wkspace new <name>`
+### `wkspace new [name]`
 
 1. Creates a new branch `<name>` from the configured base branch
 2. Creates a worktree at `.worktrees/<name>` (or whatever `directory` is configured)
-3. Runs all `setup` scripts in the worktree directory
-4. Opens an interactive shell in the worktree
+3. Allocates any configured ports and prints the assignments
+4. Runs all `setup` scripts in the worktree directory (with port env vars available)
+5. Opens an interactive shell in the worktree (with port env vars available)
+
+If `name` is omitted, a unique 8-character hex name is auto-generated (e.g. `a3f1c902`).
 
 Fails if the branch or worktree already exists.
 
@@ -73,12 +79,14 @@ Uses `$SHELL` (falls back to `/bin/sh`).
 
 Lists wkspace-managed worktrees with their name, branch, and path. Only shows worktrees inside the configured directory — not all git worktrees in the repo.
 
-### `wkspace rm <name>`
+### `wkspace rm [name]`
 
 1. Runs all `teardown` scripts in the worktree directory
 2. Removes the worktree directory
 3. Prunes stale worktree references (`git worktree prune`)
 4. Force-deletes the branch (`git branch -D`)
+
+If `name` is omitted, an interactive arrow-key picker is shown to select from active worktrees.
 
 Fails if the worktree doesn't exist. Teardown script failure stops the removal.
 
@@ -100,9 +108,15 @@ setup = []
 
 # Commands to run before removing a worktree (runs in worktree directory)
 teardown = []
+
+# [ports]
+# Allocate random available ports and expose as env vars to scripts and shell
+# Format: label = "ENV_VAR_NAME"
+# frontend_port = "FRONTEND_PORT"
+# backend_port = "BACKEND_PORT"
 ```
 
-### Example with scripts
+### Example with scripts and ports
 
 ```toml
 [worktree]
@@ -117,7 +131,13 @@ setup = [
 teardown = [
     "docker compose down",
 ]
+
+[ports]
+frontend = "FRONTEND_PORT"
+backend = "BACKEND_PORT"
 ```
+
+Each port is randomly allocated from the range 10000–11000 and guaranteed to be available at the time of allocation. The environment variables are injected into both setup scripts and the interactive shell.
 
 Scripts run sequentially via `sh -c` and stop on the first failure.
 
