@@ -31,6 +31,8 @@ enum Commands {
         /// Name of the worktree to open
         name: String,
     },
+    /// Re-run setup scripts in the current worktree
+    Setup,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -54,5 +56,6 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::List => wkspace::commands::list::run(),
         Commands::Open { name } => wkspace::commands::open::run(&name),
+        Commands::Setup => wkspace::commands::setup::run(),
     }
 }

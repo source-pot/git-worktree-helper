@@ -13,6 +13,7 @@ wkspace automates this. Define setup and teardown scripts once, and every worktr
 - Create worktrees with a single command — branch, directory, and shell session included
 - Auto-generate unique worktree names when no name is provided
 - Interactive picker to select which worktree to remove
+- Re-run setup scripts in an existing worktree with `wkspace setup`
 - Run setup scripts automatically after creating a worktree (e.g. `npm install`, `cp .env.example .env`)
 - Run teardown scripts before removal (e.g. `docker compose down`)
 - Allocate random available ports and expose them as environment variables to scripts and shell
@@ -38,6 +39,9 @@ wkspace init
 wkspace new my-feature
 
 # ... work on your feature, then exit the shell ...
+
+# Re-run setup scripts (e.g. after pulling changes)
+wkspace setup
 
 # Back in your main tree — list active worktrees
 wkspace list
@@ -68,6 +72,17 @@ This is optional — running any other command will auto-create the config if it
 If `name` is omitted, a unique 8-character hex name is auto-generated (e.g. `a3f1c902`).
 
 Fails if the branch or worktree already exists.
+
+### `wkspace setup`
+
+Re-runs setup scripts in the current worktree. Useful after pulling changes or resetting your environment.
+
+1. Validates you're inside a git worktree (not the main working tree)
+2. Loads `.wkspace.toml` from the main repository root (must already exist)
+3. Allocates fresh ports and prints the assignments
+4. Runs all `setup` scripts in the current directory (with port and `$WORKTREE_NAME` env vars)
+
+Must be run from inside a worktree created by `wkspace new`. Does not spawn a shell — you're already in one.
 
 ### `wkspace open <name>`
 

@@ -11,6 +11,8 @@ pub enum WkspaceError {
         exit_code: Option<i32>,
     },
     GitError(String),
+    NotAWorktree,
+    ConfigNotFound,
 }
 
 impl fmt::Display for WkspaceError {
@@ -35,6 +37,12 @@ impl fmt::Display for WkspaceError {
                 )
             }
             Self::GitError(msg) => write!(f, "Git error: {msg}"),
+            Self::NotAWorktree => {
+                write!(f, "Current directory is not inside a git worktree")
+            }
+            Self::ConfigNotFound => {
+                write!(f, "No .wkspace.toml found. Run 'wkspace init' first")
+            }
         }
     }
 }
