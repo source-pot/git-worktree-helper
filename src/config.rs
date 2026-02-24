@@ -86,6 +86,8 @@ teardown = []
 # Format: label = "ENV_VAR_NAME"
 # frontend_port = "FRONTEND_PORT"
 # backend_port = "BACKEND_PORT"
+
+# Note: $WORKTREE_NAME is automatically available in all scripts and the shell
 "#
         .to_string()
     }

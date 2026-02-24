@@ -26,6 +26,10 @@ pub fn run(name: &str) -> anyhow::Result<()> {
         }
     }
 
+    // Build script environment: ports + worktree metadata
+    let mut script_env = port_env;
+    script_env.insert("WORKTREE_NAME".to_string(), name.to_string());
+
     // Create worktree + branch
     println!(
         "Creating worktree '{name}' from '{}'...",
@@ -41,12 +45,12 @@ pub fn run(name: &str) -> anyhow::Result<()> {
     // Run setup scripts
     if !ctx.config.scripts.setup.is_empty() {
         println!("Running setup scripts...");
-        scripts::run_scripts(&ctx.config.scripts.setup, &worktree_path, &port_env)?;
+        scripts::run_scripts(&ctx.config.scripts.setup, &worktree_path, &script_env)?;
     }
 
     // Spawn subshell (skip in tests via env var)
     if env::var("WKSPACE_NO_SHELL").is_err() {
-        spawn_shell(&worktree_path, &port_env)?;
+        spawn_shell(&worktree_path, &script_env)?;
     }
 
     Ok(())
