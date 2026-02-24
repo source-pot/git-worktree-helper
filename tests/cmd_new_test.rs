@@ -95,6 +95,49 @@ fn new_fails_if_worktree_exists() {
 }
 
 #[test]
+fn new_injects_port_env_vars_into_setup_scripts() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+
+    // Config with a port and a setup script that writes the env var to a file
+    std::fs::write(
+        dir.path().join(".wkspace.toml"),
+        r#"
+[worktree]
+base_branch = "main"
+directory = ".worktrees"
+
+[scripts]
+setup = ["echo $MY_TEST_PORT > port.txt"]
+teardown = []
+
+[ports]
+test_port = "MY_TEST_PORT"
+"#,
+    )
+    .unwrap();
+
+    let output = wkspace_bin()
+        .args(["new", "port-test"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    let port_file = dir.path().join(".worktrees/port-test/port.txt");
+    assert!(port_file.exists(), "port.txt should have been created by setup script");
+
+    let contents = std::fs::read_to_string(&port_file).unwrap().trim().to_string();
+    let port: u16 = contents.parse().expect("port.txt should contain a valid port number");
+    assert!(
+        (10000..=11000).contains(&port),
+        "Port {port} should be in range 10000..=11000"
+    );
+}
+
+#[test]
 fn new_auto_inits_config() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

@@ -2,6 +2,7 @@ use crate::context;
 use crate::error::WkspaceError;
 use crate::git;
 use crate::scripts;
+use std::collections::HashMap;
 use std::env;
 
 pub fn run(name: &str) -> anyhow::Result<()> {
@@ -17,7 +18,7 @@ pub fn run(name: &str) -> anyhow::Result<()> {
     // Run teardown scripts (stop on failure)
     if !ctx.config.scripts.teardown.is_empty() {
         println!("Running teardown scripts...");
-        scripts::run_scripts(&ctx.config.scripts.teardown, &worktree_path)?;
+        scripts::run_scripts(&ctx.config.scripts.teardown, &worktree_path, &HashMap::new())?;
     }
 
     // Force-remove the worktree directory

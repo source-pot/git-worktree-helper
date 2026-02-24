@@ -1,5 +1,6 @@
 use anyhow::Context;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Debug, Deserialize)]
@@ -8,6 +9,8 @@ pub struct Config {
     pub worktree: WorktreeConfig,
     #[serde(default)]
     pub scripts: ScriptsConfig,
+    #[serde(default)]
+    pub ports: HashMap<String, String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,6 +42,7 @@ impl Default for Config {
         Self {
             worktree: WorktreeConfig::default(),
             scripts: ScriptsConfig::default(),
+            ports: HashMap::new(),
         }
     }
 }
@@ -95,6 +99,12 @@ setup = []
 
 # Commands to run before removing a worktree (runs in worktree directory)
 teardown = []
+
+# [ports]
+# Allocate random available ports and expose as env vars to scripts and shell
+# Format: label = "ENV_VAR_NAME"
+# frontend_port = "FRONTEND_PORT"
+# backend_port = "BACKEND_PORT"
 "#
         .to_string()
     }
