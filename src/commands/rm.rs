@@ -27,9 +27,12 @@ pub fn pick_worktree() -> anyhow::Result<String> {
         .with_prompt("Select worktree to remove")
         .items(&names)
         .default(0)
-        .interact()?;
+        .interact_opt()?;
 
-    Ok(names[selection].clone())
+    match selection {
+        Some(i) => Ok(names[i].clone()),
+        None => std::process::exit(0),
+    }
 }
 
 pub fn run(name: &str) -> anyhow::Result<()> {

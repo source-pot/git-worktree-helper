@@ -34,9 +34,12 @@ pub fn pick_branch() -> anyhow::Result<String> {
         .with_prompt("Select branch")
         .items(&available)
         .default(0)
-        .interact()?;
+        .interact_opt()?;
 
-    Ok(available[selection].clone())
+    match selection {
+        Some(i) => Ok(available[i].clone()),
+        None => std::process::exit(0),
+    }
 }
 
 pub fn run(branch: &str) -> anyhow::Result<()> {
