@@ -202,6 +202,154 @@ pub fn prune_worktrees(repo_root: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Set the description for a branch using git config.
+pub fn set_branch_description(repo_root: &Path, branch: &str, desc: &str) -> anyhow::Result<()> {
+    let output = Command::new("git")
+        .args(["config", &format!("branch.{branch}.description"), desc])
+        .current_dir(repo_root)
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!(WkspaceError::GitError(stderr.trim().to_string()));
+    }
+    Ok(())
+}
+
+/// Get the description for a branch, if set.
+pub fn get_branch_description(repo_root: &Path, branch: &str) -> Option<String> {
+    let output = Command::new("git")
+        .args(["config", &format!("branch.{branch}.description")])
+        .current_dir(repo_root)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let desc = String::from_utf8(output.stdout).ok()?.trim().to_string();
+    if desc.is_empty() {
+        None
+    } else {
+        Some(desc)
+    }
+}
+
+/// Status summary for a worktree's working directory.
+pub struct WorktreeStatus {
+    pub uncommitted_count: usize,
+}
+
+/// Get the working directory status for a worktree path.
+pub fn get_worktree_status(worktree_path: &Path) -> anyhow::Result<WorktreeStatus> {
+    let output = Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(worktree_path)
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!(WkspaceError::GitError(stderr.trim().to_string()));
+    }
+
+    let stdout = String::from_utf8(output.stdout)?;
+    let count = stdout.lines().filter(|l| !l.is_empty()).count();
+    Ok(WorktreeStatus {
+        uncommitted_count: count,
+    })
+}
+
+/// Get the last commit time for a branch.
+/// Returns (relative_time, unix_timestamp) e.g. ("3 hours ago", 1700000000).
+pub fn get_last_commit_time(repo_root: &Path, branch: &str) -> Option<(String, i64)> {
+    let output = Command::new("git")
+        .args(["log", "-1", "--format=%cr|%ct", branch])
+        .current_dir(repo_root)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let stdout = String::from_utf8(output.stdout).ok()?.trim().to_string();
+    let (relative, timestamp_str) = stdout.split_once('|')?;
+    let timestamp = timestamp_str.parse::<i64>().ok()?;
+    Some((relative.to_string(), timestamp))
+}
+
+/// List all local and remote branches, deduplicated.
+///
+/// If a local branch tracks a remote (e.g. `feat/x` and `origin/feat/x`),
+/// only the local name is kept. Remote-only branches have their `origin/` prefix stripped.
+/// Returns a sorted list of unique branch names.
+pub fn list_branches(repo_root: &Path) -> anyhow::Result<Vec<String>> {
+    let output = Command::new("git")
+        .args(["branch", "-a", "--format=%(refname:short)"])
+        .current_dir(repo_root)
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!(WkspaceError::GitError(stderr.trim().to_string()));
+    }
+
+    let stdout = String::from_utf8(output.stdout)?;
+    let mut local_branches = std::collections::HashSet::new();
+    let mut remote_only = Vec::new();
+
+    for line in stdout.lines() {
+        let name = line.trim();
+        if name.is_empty() {
+            continue;
+        }
+        if let Some(remote_name) = name.strip_prefix("origin/") {
+            // Skip HEAD pointer
+            if remote_name == "HEAD" {
+                continue;
+            }
+            remote_only.push(remote_name.to_string());
+        } else {
+            local_branches.insert(name.to_string());
+        }
+    }
+
+    // Merge: keep local names, add remote-only branches (not already local)
+    for name in remote_only {
+        local_branches.insert(name);
+    }
+
+    let mut branches: Vec<String> = local_branches.into_iter().collect();
+    branches.sort();
+    Ok(branches)
+}
+
+/// Check out an existing branch into a new worktree (no `-b` flag).
+///
+/// For remote-only branches, git automatically creates a local tracking branch.
+pub fn checkout_worktree(
+    repo_root: &Path,
+    worktree_path: &Path,
+    branch: &str,
+) -> anyhow::Result<()> {
+    // Ensure parent directory exists
+    if let Some(parent) = worktree_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let output = Command::new("git")
+        .args(["worktree", "add", &worktree_path.to_string_lossy(), branch])
+        .current_dir(repo_root)
+        .output()?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!(WkspaceError::GitError(stderr.trim().to_string()));
+    }
+    Ok(())
+}
+
 /// A parsed worktree entry from `git worktree list --porcelain`.
 #[derive(Debug)]
 pub struct WorktreeEntry {

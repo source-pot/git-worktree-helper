@@ -19,6 +19,8 @@ pub struct WorktreeConfig {
     pub base_branch: String,
     #[serde(default = "default_directory")]
     pub directory: String,
+    #[serde(default = "default_stale_days")]
+    pub stale_days: u64,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -37,11 +39,16 @@ fn default_directory() -> String {
     ".worktrees".to_string()
 }
 
+fn default_stale_days() -> u64 {
+    7
+}
+
 impl Default for WorktreeConfig {
     fn default() -> Self {
         Self {
             base_branch: default_base_branch(),
             directory: default_directory(),
+            stale_days: default_stale_days(),
         }
     }
 }
@@ -73,6 +80,9 @@ base_branch = "main"
 
 # Directory (relative to repo root) where worktrees are stored
 directory = ".worktrees"
+
+# Days since last commit before a worktree is marked "stale"
+# stale_days = 7
 
 [scripts]
 # Commands to run after creating a worktree (runs in worktree directory)

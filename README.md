@@ -11,8 +11,9 @@ wkspace automates this. Define setup and teardown scripts once, and every worktr
 ## Features
 
 - Create worktrees with a single command — branch, directory, and shell session included
+- Create worktrees from existing local or remote branches with `wkspace from`
 - Auto-generate unique worktree names when no name is provided
-- Interactive picker to select which worktree to remove
+- Interactive picker to select branches or worktrees
 - Re-run setup scripts in an existing worktree with `wkspace setup`
 - Run setup scripts automatically after creating a worktree (e.g. `npm install`, `cp .env.example .env`)
 - Run teardown scripts before removal (e.g. `docker compose down`)
@@ -37,6 +38,9 @@ wkspace init
 
 # Create a worktree called "my-feature" and drop into a shell
 wkspace new my-feature
+
+# Or create a worktree from an existing branch
+wkspace from feat/login
 
 # ... work on your feature, then exit the shell ...
 
@@ -72,6 +76,20 @@ This is optional — running any other command will auto-create the config if it
 If `name` is omitted, a unique 8-character hex name is auto-generated (e.g. `a3f1c902`).
 
 Fails if the branch or worktree already exists.
+
+### `wkspace from [branch]`
+
+Creates a worktree from an existing local or remote branch.
+
+1. Fetches the latest state from the remote
+2. Checks out the branch into `.worktrees/<name>` (branch slashes are replaced with dashes, e.g. `feat/login` → `feat-login`)
+3. Allocates any configured ports
+4. Runs all `setup` scripts
+5. Opens an interactive shell
+
+If `branch` is omitted, an interactive picker shows all available branches (excluding those already attached to a worktree).
+
+If the selected branch is the configured base branch (e.g. `main`), it delegates to `wkspace new` and creates a fresh branch with an auto-generated name.
 
 ### `wkspace setup`
 
@@ -161,6 +179,7 @@ Scripts run sequentially via `sh -c` and stop on the first failure.
 Under the hood, wkspace wraps standard git commands:
 
 - **`new`** runs `git worktree add .worktrees/<name> -b <name> <base_branch>`
+- **`from`** runs `git worktree add .worktrees/<name> <existing-branch>` (no `-b`)
 - **`rm`** removes the directory, runs `git worktree prune`, then `git branch -D <name>`
 - **`list`** parses `git worktree list --porcelain` and filters to managed worktrees
 

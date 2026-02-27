@@ -72,6 +72,27 @@ fn init_git_repo(dir: &std::path::Path) {
 }
 
 #[test]
+fn stale_days_parses_from_toml() {
+    let toml_str = r#"
+[worktree]
+base_branch = "main"
+stale_days = 14
+"#;
+    let config = Config::parse(toml_str).unwrap();
+    assert_eq!(config.worktree.stale_days, 14);
+}
+
+#[test]
+fn stale_days_defaults_to_7() {
+    let toml_str = r#"
+[worktree]
+base_branch = "main"
+"#;
+    let config = Config::parse(toml_str).unwrap();
+    assert_eq!(config.worktree.stale_days, 7);
+}
+
+#[test]
 fn resolve_context_auto_creates_config() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

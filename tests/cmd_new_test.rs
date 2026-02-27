@@ -301,6 +301,61 @@ fn new_fetches_and_updates_base_branch_from_remote() {
 }
 
 #[test]
+fn new_with_desc_stores_description() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+
+    let output = wkspace_bin()
+        .args(["new", "feat", "--desc", "my description"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Verify description was stored in git config
+    let desc = Command::new("git")
+        .args(["config", "branch.feat.description"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    let desc_str = String::from_utf8_lossy(&desc.stdout).trim().to_string();
+    assert_eq!(desc_str, "my description");
+}
+
+#[test]
+fn new_without_desc_works() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+
+    let output = wkspace_bin()
+        .args(["new", "nodesc"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Verify no description is set
+    let desc = Command::new("git")
+        .args(["config", "branch.nodesc.description"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    assert!(!desc.status.success() || String::from_utf8_lossy(&desc.stdout).trim().is_empty());
+}
+
+#[test]
 fn new_auto_inits_config() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

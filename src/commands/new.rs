@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::env;
 use std::process::Command;
 
-pub fn run(name: &str) -> anyhow::Result<()> {
+pub fn run(name: &str, desc: Option<&str>) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
     let ctx = context::resolve(&cwd)?;
     let worktree_path = ctx.worktree_path(name);
@@ -49,6 +49,11 @@ pub fn run(name: &str) -> anyhow::Result<()> {
         &ctx.config.worktree.base_branch,
     )?;
 
+    // Store branch description if provided
+    if let Some(d) = desc {
+        git::set_branch_description(&ctx.repo_root, name, d)?;
+    }
+
     // Run setup scripts
     if !ctx.config.scripts.setup.is_empty() {
         println!("Running setup scripts...");
@@ -63,7 +68,10 @@ pub fn run(name: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn spawn_shell(cwd: &std::path::Path, extra_env: &HashMap<String, String>) -> anyhow::Result<()> {
+pub(crate) fn spawn_shell(
+    cwd: &std::path::Path,
+    extra_env: &HashMap<String, String>,
+) -> anyhow::Result<()> {
     let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
     println!("Opening shell in {}...", cwd.display());
     let mut child = Command::new(&shell)
