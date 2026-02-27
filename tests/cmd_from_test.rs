@@ -173,6 +173,53 @@ teardown = []
 }
 
 #[test]
+fn rm_works_for_branches_with_slash() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+    create_branch(dir.path(), "feat/login");
+
+    // Create worktree from branch with /
+    let output = wkspace_bin()
+        .args(["from", "feat/login"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "from stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(dir.path().join(".worktrees/feat-login").exists());
+
+    // Remove using the sanitized directory name
+    let output = wkspace_bin()
+        .args(["rm", "feat-login"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "rm stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(!dir.path().join(".worktrees/feat-login").exists());
+
+    // Verify the real branch feat/login was deleted
+    let branch_check = Command::new("git")
+        .args(["branch", "--list", "feat/login"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    let branches = String::from_utf8_lossy(&branch_check.stdout);
+    assert!(
+        branches.trim().is_empty(),
+        "branch feat/login should be deleted, got: {branches}"
+    );
+}
+
+#[test]
 fn from_fails_if_worktree_already_exists() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

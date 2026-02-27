@@ -50,6 +50,15 @@ pub fn run(name: &str) -> anyhow::Result<()> {
         scripts::run_scripts(&ctx.config.scripts.teardown, &worktree_path, &script_env)?;
     }
 
+    // Resolve the real branch name from worktree metadata before removal.
+    // For worktrees created via `wkspace from`, the directory name may differ
+    // from the branch name (e.g. "feat-login" dir for "feat/login" branch).
+    let branch = git::list_worktrees(&ctx.repo_root)?
+        .into_iter()
+        .find(|e| e.path == worktree_path)
+        .and_then(|e| e.branch)
+        .unwrap_or_else(|| name.to_string());
+
     // Force-remove the worktree directory
     println!("Removing worktree '{name}'...");
     std::fs::remove_dir_all(&worktree_path)?;
@@ -58,7 +67,7 @@ pub fn run(name: &str) -> anyhow::Result<()> {
     git::prune_worktrees(&ctx.repo_root)?;
 
     // Delete the branch
-    git::delete_branch(&ctx.repo_root, name)?;
+    git::delete_branch(&ctx.repo_root, &branch)?;
 
     println!("Worktree '{name}' removed");
     Ok(())
