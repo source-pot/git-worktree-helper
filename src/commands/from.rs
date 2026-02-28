@@ -3,7 +3,7 @@ use crate::context;
 use crate::git;
 use crate::ports;
 use crate::scripts;
-use dialoguer::Select;
+use dialoguer::FuzzySelect;
 use std::collections::HashSet;
 use std::env;
 
@@ -30,7 +30,7 @@ pub fn pick_branch() -> anyhow::Result<String> {
         anyhow::bail!("No branches available (all are already attached to worktrees)");
     }
 
-    let selection = Select::new()
+    let selection = FuzzySelect::new()
         .with_prompt("Select branch")
         .items(&available)
         .default(0)

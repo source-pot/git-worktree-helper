@@ -1,6 +1,6 @@
 use crate::context;
 use crate::git;
-use dialoguer::Select;
+use dialoguer::FuzzySelect;
 use std::env;
 
 pub mod from;
@@ -28,7 +28,7 @@ pub fn pick_worktree(prompt: &str) -> anyhow::Result<String> {
         anyhow::bail!("No managed worktrees found");
     }
 
-    let selection = Select::new()
+    let selection = FuzzySelect::new()
         .with_prompt(prompt)
         .items(&names)
         .default(0)
