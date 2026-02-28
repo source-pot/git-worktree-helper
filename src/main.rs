@@ -36,8 +36,8 @@ enum Commands {
     List,
     /// Open a shell in an existing worktree
     Open {
-        /// Name of the worktree to open
-        name: String,
+        /// Name of the worktree to open (interactive picker if omitted)
+        name: Option<String>,
     },
     /// Re-run setup scripts in the current worktree
     Setup,
@@ -65,12 +65,18 @@ fn main() -> anyhow::Result<()> {
         Commands::Rm { name } => {
             let name = match name {
                 Some(n) => n,
-                None => wkspace::commands::rm::pick_worktree()?,
+                None => wkspace::commands::pick_worktree("Select worktree to remove")?,
             };
             wkspace::commands::rm::run(&name)
         }
         Commands::List => wkspace::commands::list::run(),
-        Commands::Open { name } => wkspace::commands::open::run(&name),
+        Commands::Open { name } => {
+            let name = match name {
+                Some(n) => n,
+                None => wkspace::commands::pick_worktree("Select worktree to open")?,
+            };
+            wkspace::commands::open::run(&name)
+        }
         Commands::Setup => wkspace::commands::setup::run(),
     }
 }
