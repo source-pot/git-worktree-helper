@@ -1,0 +1,26 @@
+[worktree]
+# Branch that new worktrees are based on
+base_branch = "main"
+
+# Directory (relative to repo root) where worktrees are stored
+directory = ".worktrees"
+
+# Days since last commit before a worktree is marked "stale"
+# stale_days = 7
+
+branch_prefix = "rob"
+
+[scripts]
+# Commands to run after creating a worktree (runs in worktree directory)
+setup = []
+
+# Commands to run before removing a worktree (runs in worktree directory)
+teardown = []
+
+# [ports]
+# Allocate random available ports and expose as env vars to scripts and shell
+# Format: label = "ENV_VAR_NAME"
+# frontend_port = "FRONTEND_PORT"
+# backend_port = "BACKEND_PORT"
+
+# Note: $WORKTREE_NAME is automatically available in all scripts and the shell
