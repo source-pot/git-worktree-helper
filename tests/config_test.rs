@@ -28,6 +28,7 @@ fn default_config_has_sensible_values() {
     let config = Config::default();
     assert_eq!(config.worktree.base_branch, "main");
     assert_eq!(config.worktree.directory, ".worktrees");
+    assert_eq!(config.worktree.prefix, "");
     assert!(config.scripts.setup.is_empty());
     assert!(config.scripts.teardown.is_empty());
 }
@@ -80,6 +81,27 @@ stale_days = 14
 "#;
     let config = Config::parse(toml_str).unwrap();
     assert_eq!(config.worktree.stale_days, 14);
+}
+
+#[test]
+fn prefix_parses_from_toml() {
+    let toml_str = r#"
+[worktree]
+base_branch = "main"
+prefix = "rob"
+"#;
+    let config = Config::parse(toml_str).unwrap();
+    assert_eq!(config.worktree.prefix, "rob");
+}
+
+#[test]
+fn prefix_defaults_to_empty() {
+    let toml_str = r#"
+[worktree]
+base_branch = "main"
+"#;
+    let config = Config::parse(toml_str).unwrap();
+    assert_eq!(config.worktree.prefix, "");
 }
 
 #[test]

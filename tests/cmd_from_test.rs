@@ -243,5 +243,47 @@ fn from_fails_if_worktree_already_exists() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("already exists"));
+    assert!(
+        stderr.contains("already checked out"),
+        "expected 'already checked out' error, got: {stderr}"
+    );
+}
+
+#[test]
+fn from_fails_if_branch_already_checked_out() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+    create_branch(dir.path(), "shared-branch");
+
+    // Create worktree from the branch
+    let output = wkspace_bin()
+        .args(["from", "shared-branch"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "first from stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Remove the worktree directory but leave the branch checked out
+    // (simulate the branch being attached to a worktree elsewhere)
+    // Actually, the worktree still exists with the branch attached,
+    // so trying `from` again with the same branch should fail with
+    // "already checked out" even if the directory name would differ.
+    let output = wkspace_bin()
+        .args(["from", "shared-branch"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("already checked out"),
+        "expected 'already checked out' error, got: {stderr}"
+    );
 }

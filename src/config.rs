@@ -21,6 +21,8 @@ pub struct WorktreeConfig {
     pub directory: String,
     #[serde(default = "default_stale_days")]
     pub stale_days: u64,
+    #[serde(default)]
+    pub prefix: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -49,6 +51,7 @@ impl Default for WorktreeConfig {
             base_branch: default_base_branch(),
             directory: default_directory(),
             stale_days: default_stale_days(),
+            prefix: String::new(),
         }
     }
 }
@@ -83,6 +86,10 @@ directory = ".worktrees"
 
 # Days since last commit before a worktree is marked "stale"
 # stale_days = 7
+
+# Prefix for branch names (e.g. your username: "rob")
+# Branches will be created as prefix/name (e.g. rob/my-feature)
+# prefix = ""
 
 [scripts]
 # Commands to run after creating a worktree (runs in worktree directory)

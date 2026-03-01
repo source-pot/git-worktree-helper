@@ -13,6 +13,7 @@ pub enum WkspaceError {
     GitError(String),
     NotAWorktree,
     ConfigNotFound,
+    BranchAlreadyCheckedOut(String),
 }
 
 impl fmt::Display for WkspaceError {
@@ -42,6 +43,12 @@ impl fmt::Display for WkspaceError {
             }
             Self::ConfigNotFound => {
                 write!(f, "No .wkspace.toml found. Run 'wkspace init' first")
+            }
+            Self::BranchAlreadyCheckedOut(name) => {
+                write!(
+                    f,
+                    "Branch '{name}' is already checked out in another worktree"
+                )
             }
         }
     }

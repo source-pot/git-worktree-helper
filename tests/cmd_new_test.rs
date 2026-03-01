@@ -356,6 +356,54 @@ fn new_without_desc_works() {
 }
 
 #[test]
+fn new_with_prefix_creates_prefixed_branch_and_dir() {
+    let dir = TempDir::new().unwrap();
+    init_git_repo(dir.path());
+
+    std::fs::write(
+        dir.path().join(".wkspace.toml"),
+        r#"
+[worktree]
+base_branch = "main"
+directory = ".worktrees"
+prefix = "rob"
+
+[scripts]
+setup = []
+teardown = []
+"#,
+    )
+    .unwrap();
+
+    let output = wkspace_bin()
+        .args(["new", "my-feature"])
+        .current_dir(dir.path())
+        .env("WKSPACE_NO_SHELL", "1")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Worktree directory should use dash-separated name
+    assert!(dir.path().join(".worktrees/rob-my-feature").exists());
+
+    // Git branch should be rob/my-feature
+    let branches = Command::new("git")
+        .args(["branch", "--list", "rob/my-feature"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    assert!(
+        !String::from_utf8_lossy(&branches.stdout).trim().is_empty(),
+        "branch rob/my-feature should exist"
+    );
+}
+
+#[test]
 fn new_auto_inits_config() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

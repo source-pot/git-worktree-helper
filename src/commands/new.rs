@@ -10,11 +10,20 @@ use std::process::Command;
 pub fn run(name: &str, desc: Option<&str>) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
     let ctx = context::resolve(&cwd)?;
-    let worktree_path = ctx.worktree_path(name);
+
+    // Apply prefix to branch name if configured
+    let prefix = &ctx.config.worktree.prefix;
+    let branch_name = if prefix.is_empty() {
+        name.to_string()
+    } else {
+        format!("{prefix}/{name}")
+    };
+    let worktree_name = branch_name.replace('/', "-");
+    let worktree_path = ctx.worktree_path(&worktree_name);
 
     // Check if worktree directory already exists
     if worktree_path.exists() {
-        anyhow::bail!(WkspaceError::WorktreeExists(name.to_string()));
+        anyhow::bail!(WkspaceError::WorktreeExists(worktree_name.clone()));
     }
 
     // Allocate ports before worktree creation (fail early)
@@ -28,7 +37,7 @@ pub fn run(name: &str, desc: Option<&str>) -> anyhow::Result<()> {
 
     // Build script environment: ports + worktree metadata
     let mut script_env = port_env;
-    script_env.insert("WORKTREE_NAME".to_string(), name.to_string());
+    script_env.insert("WORKTREE_NAME".to_string(), worktree_name.clone());
 
     // Update base branch from remote before branching
     println!(
@@ -39,19 +48,19 @@ pub fn run(name: &str, desc: Option<&str>) -> anyhow::Result<()> {
 
     // Create worktree + branch
     println!(
-        "Creating worktree '{name}' from '{}'...",
+        "Creating worktree '{worktree_name}' from '{}'...",
         ctx.config.worktree.base_branch
     );
     git::add_worktree(
         &ctx.repo_root,
         &worktree_path,
-        name,
+        &branch_name,
         &ctx.config.worktree.base_branch,
     )?;
 
     // Store branch description if provided
     if let Some(d) = desc {
-        git::set_branch_description(&ctx.repo_root, name, d)?;
+        git::set_branch_description(&ctx.repo_root, &branch_name, d)?;
     }
 
     // Run setup scripts

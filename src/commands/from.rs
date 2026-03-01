@@ -1,5 +1,6 @@
 use crate::commands::new;
 use crate::context;
+use crate::error::WkspaceError;
 use crate::git;
 use crate::ports;
 use crate::scripts;
@@ -52,14 +53,19 @@ pub fn run(branch: &str) -> anyhow::Result<()> {
         return new::run(&name, None);
     }
 
+    // Check if the branch is already checked out in another worktree
+    let worktrees = git::list_worktrees(&ctx.repo_root)?;
+    let attached: HashSet<String> = worktrees.iter().filter_map(|w| w.branch.clone()).collect();
+    if attached.contains(branch) {
+        anyhow::bail!(WkspaceError::BranchAlreadyCheckedOut(branch.to_string()));
+    }
+
     // Derive worktree directory name: replace / with - for path safety
     let worktree_name = branch.replace('/', "-");
     let worktree_path = ctx.worktree_path(&worktree_name);
 
     if worktree_path.exists() {
-        anyhow::bail!(crate::error::WkspaceError::WorktreeExists(
-            worktree_name.clone()
-        ));
+        anyhow::bail!(WkspaceError::WorktreeExists(worktree_name.clone()));
     }
 
     // Allocate ports before worktree creation (fail early)
