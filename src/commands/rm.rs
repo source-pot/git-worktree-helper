@@ -48,12 +48,9 @@ pub fn run(name: &str, force: bool) -> anyhow::Result<()> {
         .and_then(|e| e.branch)
         .unwrap_or_else(|| name.to_string());
 
-    // Force-remove the worktree directory
+    // Remove the worktree directory and git metadata in one step
     println!("Removing worktree '{name}'...");
-    std::fs::remove_dir_all(&worktree_path)?;
-
-    // Prune stale worktree references
-    git::prune_worktrees(&ctx.repo_root)?;
+    git::remove_worktree(&ctx.repo_root, &worktree_path)?;
 
     // Delete the branch
     git::delete_branch(&ctx.repo_root, &branch)?;

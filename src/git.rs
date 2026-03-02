@@ -202,6 +202,33 @@ pub fn prune_worktrees(repo_root: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Remove a worktree directory and its git metadata in one step.
+/// Retries up to 3 times to handle transient macOS filesystem errors
+/// (Spotlight indexing, .DS_Store creation during deletion).
+pub fn remove_worktree(repo_root: &Path, worktree_path: &Path) -> anyhow::Result<()> {
+    let path_str = worktree_path.to_string_lossy();
+    let args = ["worktree", "remove", "--force", &path_str];
+
+    for attempt in 0..3 {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(repo_root)
+            .output()?;
+
+        if output.status.success() {
+            return Ok(());
+        }
+
+        if attempt < 2 {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!(WkspaceError::GitError(stderr.trim().to_string()));
+        }
+    }
+    unreachable!()
+}
+
 /// Set the description for a branch using git config.
 pub fn set_branch_description(repo_root: &Path, branch: &str, desc: &str) -> anyhow::Result<()> {
     let output = Command::new("git")
