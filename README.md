@@ -12,7 +12,7 @@ wkspace automates this. Define setup and teardown scripts once, and every worktr
 
 - Create worktrees with a single command — branch, directory, and shell session included
 - Create worktrees from existing local or remote branches with `wkspace from`
-- Auto-generate unique worktree names when no name is provided
+- Interactive prompt for worktree name when not provided as an argument
 - Interactive picker to select branches or worktrees
 - Re-run setup scripts in an existing worktree with `wkspace setup`
 - Run setup scripts automatically after creating a worktree (e.g. `npm install`, `cp .env.example .env`)
@@ -77,7 +77,7 @@ This is optional — running any other command will auto-create the config if it
 4. Runs all `setup` scripts in the worktree directory (with port env vars available)
 5. Opens an interactive shell in the worktree (with port env vars available)
 
-If `name` is omitted, a unique 8-character hex name is auto-generated (e.g. `a3f1c902`).
+If `name` is omitted, an interactive prompt asks for one.
 
 Fails if the branch or worktree already exists.
 
@@ -93,7 +93,7 @@ Creates a worktree from an existing local or remote branch.
 
 If `branch` is omitted, an interactive picker shows all available branches (excluding those already attached to a worktree).
 
-If the selected branch is the configured base branch (e.g. `main`), it delegates to `wkspace new` and creates a fresh branch with an auto-generated name.
+Selecting the base branch (e.g. `main`) is not allowed — use `wkspace new` instead to create a fresh branch.
 
 ### `wkspace setup`
 
