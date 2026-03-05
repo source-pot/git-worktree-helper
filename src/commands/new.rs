@@ -3,9 +3,15 @@ use crate::error::WkspaceError;
 use crate::git;
 use crate::ports;
 use crate::scripts;
+use dialoguer::Input;
 use std::collections::HashMap;
 use std::env;
 use std::process::Command;
+
+pub fn prompt_name() -> anyhow::Result<String> {
+    let name: String = Input::new().with_prompt("Worktree name").interact_text()?;
+    Ok(name)
+}
 
 pub fn run(name: &str, desc: Option<&str>, no_shell: bool) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
