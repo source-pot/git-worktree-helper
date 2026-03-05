@@ -79,6 +79,8 @@ This is optional — running any other command will auto-create the config if it
 
 If `name` is omitted, an interactive prompt asks for one.
 
+Use `--no-setup` to skip running setup scripts. Use `--no-shell` to skip opening the interactive shell.
+
 Fails if the branch or worktree already exists.
 
 ### `wkspace from [branch]`
@@ -92,6 +94,8 @@ Creates a worktree from an existing local or remote branch.
 5. Opens an interactive shell
 
 If `branch` is omitted, an interactive picker shows all available branches (excluding those already attached to a worktree).
+
+Use `--no-setup` to skip running setup scripts.
 
 Selecting the base branch (e.g. `main`) is not allowed — use `wkspace new` instead to create a fresh branch.
 

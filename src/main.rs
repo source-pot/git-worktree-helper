@@ -24,11 +24,17 @@ enum Commands {
         /// Skip spawning an interactive shell after setup
         #[arg(long)]
         no_shell: bool,
+        /// Skip running setup scripts
+        #[arg(long)]
+        no_setup: bool,
     },
     /// Create a worktree from an existing branch
     From {
         /// Branch name (interactive picker if omitted)
         branch: Option<String>,
+        /// Skip running setup scripts
+        #[arg(long)]
+        no_setup: bool,
     },
     /// Run teardown scripts and remove a worktree and its branch
     Rm {
@@ -58,19 +64,20 @@ fn main() -> anyhow::Result<()> {
             name,
             desc,
             no_shell,
+            no_setup,
         } => {
             let name = match name {
                 Some(n) => n,
                 None => wkspace::commands::new::prompt_name()?,
             };
-            wkspace::commands::new::run(&name, desc.as_deref(), no_shell)
+            wkspace::commands::new::run(&name, desc.as_deref(), no_shell, no_setup)
         }
-        Commands::From { branch } => {
+        Commands::From { branch, no_setup } => {
             let branch = match branch {
                 Some(b) => b,
                 None => wkspace::commands::from::pick_branch()?,
             };
-            wkspace::commands::from::run(&branch)
+            wkspace::commands::from::run(&branch, no_setup)
         }
         Commands::Rm { name, force } => {
             let name = match name {
