@@ -47,10 +47,8 @@ pub fn run(branch: &str) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
     let ctx = context::resolve(&cwd)?;
 
-    // If the selected branch is the base branch, delegate to `new` flow
     if branch == ctx.config.worktree.base_branch {
-        let name = crate::names::generate_unique_name()?;
-        return new::run(&name, None, false);
+        anyhow::bail!("Cannot create worktree from base branch — use `wkspace new <name>` instead");
     }
 
     // Check if the branch is already checked out in another worktree

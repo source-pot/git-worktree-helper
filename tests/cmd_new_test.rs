@@ -178,39 +178,6 @@ test_port = "MY_TEST_PORT"
 }
 
 #[test]
-fn new_with_no_name_creates_worktree_with_random_name() {
-    let dir = TempDir::new().unwrap();
-    init_git_repo(dir.path());
-
-    let output = wkspace_bin()
-        .arg("new")
-        .current_dir(dir.path())
-        .env("WKSPACE_NO_SHELL", "1")
-        .output()
-        .unwrap();
-
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    let worktrees_dir = dir.path().join(".worktrees");
-    let entries: Vec<_> = std::fs::read_dir(&worktrees_dir)
-        .unwrap()
-        .filter_map(|e| e.ok())
-        .collect();
-    assert_eq!(entries.len(), 1, "expected exactly 1 worktree dir");
-
-    let name = entries[0].file_name().to_string_lossy().into_owned();
-    assert_eq!(name.len(), 8, "name should be 8 chars, got: {name}");
-    assert!(
-        name.chars().all(|c| c.is_ascii_hexdigit()),
-        "name should be hex, got: {name}"
-    );
-}
-
-#[test]
 fn new_fetches_and_updates_base_branch_from_remote() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());

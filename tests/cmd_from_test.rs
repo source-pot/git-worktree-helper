@@ -104,7 +104,7 @@ fn from_sanitizes_slash_in_branch_name() {
 }
 
 #[test]
-fn from_base_branch_delegates_to_new() {
+fn from_base_branch_errors() {
     let dir = TempDir::new().unwrap();
     init_git_repo(dir.path());
 
@@ -115,26 +115,9 @@ fn from_base_branch_delegates_to_new() {
         .output()
         .unwrap();
 
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    // Should have created a worktree with a hex name (delegated to new)
-    let worktrees_dir = dir.path().join(".worktrees");
-    let entries: Vec<_> = std::fs::read_dir(&worktrees_dir)
-        .unwrap()
-        .filter_map(|e| e.ok())
-        .collect();
-    assert_eq!(entries.len(), 1, "expected exactly 1 worktree dir");
-
-    let name = entries[0].file_name().to_string_lossy().into_owned();
-    assert_eq!(name.len(), 8, "name should be 8 hex chars, got: {name}");
-    assert!(
-        name.chars().all(|c| c.is_ascii_hexdigit()),
-        "name should be hex, got: {name}"
-    );
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Cannot create worktree from base branch"));
 }
 
 #[test]

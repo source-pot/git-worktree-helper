@@ -16,7 +16,7 @@ enum Commands {
     Init,
     /// Create a new worktree with a branch, run setup scripts, and open a shell
     New {
-        /// Name for the worktree and branch (auto-generated if omitted)
+        /// Name for the worktree and branch (prompted if omitted)
         name: Option<String>,
         /// Description for the worktree branch
         #[arg(short, long)]
@@ -61,7 +61,7 @@ fn main() -> anyhow::Result<()> {
         } => {
             let name = match name {
                 Some(n) => n,
-                None => wkspace::names::generate_unique_name()?,
+                None => wkspace::commands::new::prompt_name()?,
             };
             wkspace::commands::new::run(&name, desc.as_deref(), no_shell)
         }
