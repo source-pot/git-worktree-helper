@@ -13,7 +13,7 @@ pub fn prompt_name() -> anyhow::Result<String> {
     Ok(name)
 }
 
-pub fn run(name: &str, desc: Option<&str>, no_shell: bool, no_setup: bool) -> anyhow::Result<()> {
+pub fn run(name: &str, desc: Option<&str>, no_shell: bool, no_scripts: bool) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
     let ctx = context::resolve(&cwd)?;
 
@@ -70,7 +70,7 @@ pub fn run(name: &str, desc: Option<&str>, no_shell: bool, no_setup: bool) -> an
     }
 
     // Run setup scripts
-    if !no_setup && !ctx.config.scripts.setup.is_empty() {
+    if !no_scripts && !ctx.config.scripts.setup.is_empty() {
         println!("Running setup scripts...");
         scripts::run_scripts(&ctx.config.scripts.setup, &worktree_path, &script_env)?;
     }

@@ -5,7 +5,7 @@ use crate::scripts;
 use std::collections::HashMap;
 use std::env;
 
-pub fn run(name: &str, force: bool) -> anyhow::Result<()> {
+pub fn run(name: &str, force: bool, no_scripts: bool) -> anyhow::Result<()> {
     let cwd = env::current_dir()?;
     let ctx = context::resolve(&cwd)?;
     let worktree_path = ctx.worktree_path(name);
@@ -32,7 +32,7 @@ pub fn run(name: &str, force: bool) -> anyhow::Result<()> {
     }
 
     // Run teardown scripts (stop on failure)
-    if !ctx.config.scripts.teardown.is_empty() {
+    if !no_scripts && !ctx.config.scripts.teardown.is_empty() {
         println!("Running teardown scripts...");
         let mut script_env = HashMap::new();
         script_env.insert("WORKTREE_NAME".to_string(), name.to_string());

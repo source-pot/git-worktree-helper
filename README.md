@@ -79,7 +79,7 @@ This is optional — running any other command will auto-create the config if it
 
 If `name` is omitted, an interactive prompt asks for one.
 
-Use `--no-setup` to skip running setup scripts. Use `--no-shell` to skip opening the interactive shell.
+Use `--no-scripts` to skip running setup scripts. Use `--no-shell` to skip opening the interactive shell.
 
 Fails if the branch or worktree already exists.
 
@@ -95,7 +95,7 @@ Creates a worktree from an existing local or remote branch.
 
 If `branch` is omitted, an interactive picker shows all available branches (excluding those already attached to a worktree).
 
-Use `--no-setup` to skip running setup scripts.
+Use `--no-scripts` to skip running setup scripts.
 
 Selecting the base branch (e.g. `main`) is not allowed — use `wkspace new` instead to create a fresh branch.
 
@@ -128,6 +128,8 @@ Lists wkspace-managed worktrees with their name, branch, and path. Only shows wo
 4. Force-deletes the branch (`git branch -D`)
 
 If `name` is omitted, an interactive arrow-key picker is shown to select from active worktrees.
+
+Use `--no-scripts` to skip running teardown scripts.
 
 Fails if the worktree doesn't exist. Teardown script failure stops the removal.
 

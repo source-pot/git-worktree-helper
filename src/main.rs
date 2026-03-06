@@ -24,17 +24,17 @@ enum Commands {
         /// Skip spawning an interactive shell after setup
         #[arg(long)]
         no_shell: bool,
-        /// Skip running setup scripts
+        /// Skip running lifecycle scripts
         #[arg(long)]
-        no_setup: bool,
+        no_scripts: bool,
     },
     /// Create a worktree from an existing branch
     From {
         /// Branch name (interactive picker if omitted)
         branch: Option<String>,
-        /// Skip running setup scripts
+        /// Skip running lifecycle scripts
         #[arg(long)]
-        no_setup: bool,
+        no_scripts: bool,
     },
     /// Run teardown scripts and remove a worktree and its branch
     Rm {
@@ -43,6 +43,9 @@ enum Commands {
         /// Skip confirmation prompt for uncommitted changes
         #[arg(short, long)]
         force: bool,
+        /// Skip running lifecycle scripts
+        #[arg(long)]
+        no_scripts: bool,
     },
     /// List active worktrees
     List,
@@ -64,27 +67,31 @@ fn main() -> anyhow::Result<()> {
             name,
             desc,
             no_shell,
-            no_setup,
+            no_scripts,
         } => {
             let name = match name {
                 Some(n) => n,
                 None => wkspace::commands::new::prompt_name()?,
             };
-            wkspace::commands::new::run(&name, desc.as_deref(), no_shell, no_setup)
+            wkspace::commands::new::run(&name, desc.as_deref(), no_shell, no_scripts)
         }
-        Commands::From { branch, no_setup } => {
+        Commands::From { branch, no_scripts } => {
             let branch = match branch {
                 Some(b) => b,
                 None => wkspace::commands::from::pick_branch()?,
             };
-            wkspace::commands::from::run(&branch, no_setup)
+            wkspace::commands::from::run(&branch, no_scripts)
         }
-        Commands::Rm { name, force } => {
+        Commands::Rm {
+            name,
+            force,
+            no_scripts,
+        } => {
             let name = match name {
                 Some(n) => n,
                 None => wkspace::commands::pick_worktree("Select worktree to remove")?,
             };
-            wkspace::commands::rm::run(&name, force)
+            wkspace::commands::rm::run(&name, force, no_scripts)
         }
         Commands::List => wkspace::commands::list::run(),
         Commands::Open { name } => {
