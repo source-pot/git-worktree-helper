@@ -10,6 +10,7 @@ pub mod new;
 pub mod open;
 pub mod rm;
 pub mod setup;
+pub mod teardown;
 
 /// Show an interactive picker to select a managed worktree.
 pub fn pick_worktree(prompt: &str) -> anyhow::Result<String> {
