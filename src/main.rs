@@ -56,6 +56,8 @@ enum Commands {
     },
     /// Re-run setup scripts in the current worktree
     Setup,
+    /// Re-run teardown scripts in the current worktree
+    Teardown,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -102,5 +104,6 @@ fn main() -> anyhow::Result<()> {
             wkspace::commands::open::run(&name)
         }
         Commands::Setup => wkspace::commands::setup::run(),
+        Commands::Teardown => wkspace::commands::teardown::run(),
     }
 }
