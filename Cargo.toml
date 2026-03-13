@@ -1,6 +1,6 @@
 [package]
 name = "wkspace"
-version = "6.0.0"
+version = "7.0.0"
 edition = "2021"
 description = "A CLI tool to manage Git worktrees with lifecycle scripts"
 license = "MIT"
